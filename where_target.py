@@ -135,7 +135,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-targets', help='target', default=['all'], type=str, nargs='*', choices=['all', 'sun', 'moon', 'planets']+list(add_targets.keys()))
     parser.add_argument('-start', help='start time (UTC): year/month/day or year/month/day-hour:min', type=str)
-    parser.add_argument('-end', help='start time (UTC): year/month/day or year/month/day-hour:min', type=str)
+    parser.add_argument('-end', help='end time (UTC): year/month/day or year/month/day-hour:min', type=str)
     parser.add_argument('-interval', help='interval time [minutes]', type=float)
     args = parser.parse_args()
     main(args)
