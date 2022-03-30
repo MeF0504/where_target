@@ -1,0 +1,15 @@
+{
+    "obs": {
+        "lat": "-22.9579",
+        "lon": "-67.7862"
+    },
+    "targets": [
+        {
+            "type": "calibration",
+            "name": "Tau A",
+            "ra": "1:44:04.08",
+            "dec": "-15:56:14.93",
+            "comment": "ra = hour:min:sec, dec = deg:arcmin:arcsec"
+        }
+    ]
+}

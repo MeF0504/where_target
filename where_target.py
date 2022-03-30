@@ -18,19 +18,26 @@ add_targets = {}
 conf_file = Path(__file__).parent/'where_target_config.json'
 if conf_file.is_file():
     with open(conf_file, 'r') as f:
-        for target in json.load(f):
-            ttype = target['type']
-            if ttype in add_targets:
-                add_targets[ttype].append(target)
-            else:
-                add_targets[ttype] = [target]
+        conf = json.load(f)
+        if 'targets' in conf:
+            for target in conf['targets']:
+                ttype = target['type']
+                if ttype in add_targets:
+                    add_targets[ttype].append(target)
+                else:
+                    add_targets[ttype] = [target]
 
-def make_fixed_target(name, ra, dec, magnitude):
+def make_fixed_target(name, ra, dec):
     # https://rhodesmill.org/pyephem/quick.html#catalog-format
     # http://www.clearskyinstitute.com/xephem/help/xephem.html#mozTocId468501
-    line = '{},f,{},{},{},2000'.format(name, ra, dec, magnitude)
-    patch = ephem.readdb(line)
-    return patch
+    # line = '{},f,{},{},{},2000'.format(name, ra, dec, magnitude)
+    # star = ephem.readdb(line)
+    star = ephem.FixedBody()
+    star.name = name
+    star._ra = ephem.hours(ra)
+    star._dec = ephem.hours(dec)
+    star._epoch = '2000'
+    return star
 
 def get_targets(targets):
     res = []
@@ -46,15 +53,21 @@ def get_targets(targets):
     for ttype in add_targets:
         if 'all' in targets or ttype in targets:
             for add_target in add_targets[ttype]:
-                res.append(make_fixed_target(add_target['name'], add_target['ra'], add_target['dec'], add_target['amplitude']))
+                res.append(make_fixed_target(add_target['name'], add_target['ra'], add_target['dec']))
     return res
 
 def main(args):
-    obs = ephem.Observer()
-    obs.lat = "-22.9579"
-    obs.lon = "-67.7862"
-    # obs = ephem.city('Tokyo')
+    # set observation place
+    if 'obs' in conf:
+        obs = ephem.Observer()
+        obs.lat = conf['obs']['lat']
+        obs.lon = conf['obs']['lon']
+    else:
+        obs = ephem.Observer()
+        obs.lat = "-22.9579"
+        obs.lon = "-67.7862"
 
+    # set time
     if args.start is None:
         start_time = datetime.now(tz=timezone.utc)
     elif re.match('[0-9][0-9][0-9][0-9]/[0-9][0-9]?/[0-9][0-9]?-[0-9][0-9]?:[0-9][0-9]?', args.start):
@@ -81,11 +94,12 @@ def main(args):
     else:
         interval = args.interval
 
+    # calculate
     targets = get_targets(args.targets)
-    # for plot 1
+    # for table
     table_label = ['time (UTC)']+[target.name for target in targets]
     table_contents = []
-    # for plot 2
+    # for az/el plot
     targets_az = {}
     targets_el = {}
     for target in targets:
@@ -105,7 +119,7 @@ def main(args):
             targets_el[target.name].append(target.alt)
         table_contents.append(line_contents)
 
-    # time table
+    # make table
     table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
     print(table_str)
     fs = 15
@@ -117,10 +131,11 @@ def main(args):
     for pos, cell in table.get_celld().items():
         cell.set_height(1/len(times))
 
+    # plot table
     fig1.tight_layout(rect=[0.05, 0.05, 0.95, 0.9])  # left, bot, right, top
     fig1.savefig('tmp/targets1.pdf')
 
-    # azimuth changes
+    # az plot
     fig2 = plt.figure()
     ax21 = fig2.add_subplot(111)
     for tname in targets_az:
