@@ -138,10 +138,12 @@ def main(args):
     # make table
     table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
     print(table_str)
-    fig1 = plt.figure(figsize=(len(targets)*3, len(times)/3))
+    weight = len(targets)*3+2.3
+    colWidths = np.concatenate(([2.3], np.ones(len(targets))*3))/weight
+    fig1 = plt.figure(figsize=(weight, len(times)/3))
     ax11 = fig1.add_subplot(111)
     ax11.axis('off')
-    table = ax11.table(cellText=table_contents, colLabels=table_label, rowLabels=None, loc='center', colLoc='center', rowLoc='center', fontsize=fs)
+    table = ax11.table(cellText=table_contents, colLabels=table_label, rowLabels=None, loc='center', colLoc='center', rowLoc='center', colWidths=colWidths, fontsize=fs)
     table.auto_set_font_size(False)
     for pos, cell in table.get_celld().items():
         cell.set_height(1/len(times))
