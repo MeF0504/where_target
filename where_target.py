@@ -87,8 +87,10 @@ def main(args):
     table_contents = []
     # for plot 2
     targets_az = {}
+    targets_el = {}
     for target in targets:
         targets_az[target.name] = []
+        targets_el[target.name] = []
 
     times = np.arange(datetime.timestamp(start_time), datetime.timestamp(end_time), interval*60)
     for time in times:
@@ -100,6 +102,7 @@ def main(args):
             target.compute(obs)
             line_contents.append('az: {:05.1f} deg | el: {:+05.1f} deg'.format(deg*target.az, deg*target.alt))
             targets_az[target.name].append(target.az)
+            targets_el[target.name].append(target.alt)
         table_contents.append(line_contents)
 
     # time table
@@ -128,6 +131,18 @@ def main(args):
     ax21.set_ylabel('azimuth [deg]')
     fig2.legend()
     fig2.savefig('tmp/targets2.pdf')
+
+    # el plot
+    fig3 = plt.figure()
+    ax31 = fig3.add_subplot(111)
+    for tname in targets_el:
+        ax31.plot(times, np.array(targets_el[tname])*deg, '-', label=tname)
+    print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
+    ax31.set_xticks(print_times)
+    ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
+    ax31.set_ylabel('elevation [deg]')
+    fig3.legend()
+    fig3.savefig('tmp/targets3.pdf')
 
     plt.show()
 
