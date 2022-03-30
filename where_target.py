@@ -96,15 +96,24 @@ def main(args):
 
     # calculate
     targets = get_targets(args.targets)
-    # for table
+    ## for table
     table_label = ['time (UTC)']+[target.name for target in targets]
     table_contents = []
-    # for az/el plot
+    ## for az/el plot
     targets_az = {}
     targets_el = {}
+    ## observable check
+    el_min = 30.*np.pi/180.
+    sun_thd = 5*np.pi/180.
+    moon_thd = 5*np.pi/180.
+    targets_obsable = {}
+    sun = ephem.Sun()
+    moon = ephem.Moon()
+
     for target in targets:
         targets_az[target.name] = []
         targets_el[target.name] = []
+        targets_obsable[target.name] = []
 
     times = np.arange(datetime.timestamp(start_time), datetime.timestamp(end_time), interval*60)
     for time in times:
@@ -117,12 +126,18 @@ def main(args):
             line_contents.append('az: {:05.1f} deg | el: {:+05.1f} deg'.format(deg*target.az, deg*target.alt))
             targets_az[target.name].append(target.az)
             targets_el[target.name].append(target.alt)
+            sun.compute(obs)
+            moon.compute(obs)
+            targets_obsable[target.name].append(\
+                    target.alt>=el_min and\
+                    ephem.separation(target, sun)>sun_thd and\
+                    ephem.separation(target, moon)>moon_thd)
         table_contents.append(line_contents)
 
+    fs = 15
     # make table
     table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
     print(table_str)
-    fs = 15
     fig1 = plt.figure(figsize=(len(targets)*3, len(times)/3))
     ax11 = fig1.add_subplot(111)
     ax11.axis('off')
@@ -131,16 +146,17 @@ def main(args):
     for pos, cell in table.get_celld().items():
         cell.set_height(1/len(times))
 
+    plt.rcParams['font.size'] = fs
+    print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
     # plot table
     fig1.tight_layout(rect=[0.05, 0.05, 0.95, 0.9])  # left, bot, right, top
     fig1.savefig('tmp/targets1.pdf')
 
     # az plot
-    fig2 = plt.figure()
+    fig2 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax21 = fig2.add_subplot(111)
     for tname in targets_az:
         ax21.plot(times, np.array(targets_az[tname])*deg, '-', label=tname)
-    print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
     ax21.set_xticks(print_times)
     ax21.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax21.set_ylabel('azimuth [deg]')
@@ -148,16 +164,27 @@ def main(args):
     fig2.savefig('tmp/targets2.pdf')
 
     # el plot
-    fig3 = plt.figure()
+    fig3 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax31 = fig3.add_subplot(111)
     for tname in targets_el:
         ax31.plot(times, np.array(targets_el[tname])*deg, '-', label=tname)
-    print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
     ax31.set_xticks(print_times)
     ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax31.set_ylabel('elevation [deg]')
     fig3.legend()
     fig3.savefig('tmp/targets3.pdf')
+
+    # observable flag plot
+    fig4 = plt.figure(figsize=(16/1.5, 9/1.5))
+    ax41 = fig4.add_subplot(111)
+    for i,target in enumerate(targets):
+        ax41.plot(times, np.where(targets_obsable[target.name], len(targets)-i, np.nan), '-', lw=4)
+    ax41.set_xticks(print_times)
+    ax41.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
+    ax41.set_yticks([len(targets)-i for i in range(len(targets))])
+    ax41.set_yticklabels(targets_obsable.keys())
+    ax41.set_ylim([0.5, len(targets)+0.5])
+    fig4.savefig('tmp/targets4.pdf')
 
     plt.show()
 
