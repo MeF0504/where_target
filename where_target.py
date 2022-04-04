@@ -188,6 +188,23 @@ def main(args):
     ax41.set_ylim([0.5, len(targets)+0.5])
     fig4.savefig('tmp/targets4.pdf')
 
+    # pointing of stars
+    fig5 = plt.figure(figsize=(16/1.5, 9/1.5))
+    ax51 = fig5.add_subplot(111, projection='mollweide')
+    cmap = plt.get_cmap('tab10')
+    for i,target in enumerate(targets):
+        lat = np.array(targets_az[target.name])
+        lat = np.where(lat>np.pi, lat-2*np.pi, lat)
+        lon = np.array(targets_el[target.name])
+        ax51.plot(lat[1:-1], lon[1:-1], '.', color=cmap(i), label=target.name)
+        # ax51.plot(lat, lon, '--', color=cmap(i), label=target.name)
+        ax51.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
+        ax51.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
+    fig5.legend()
+    ax_pos = ax51.get_position()
+    fig5.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
+    fig5.savefig('tmp/targets5.pdf')
+
     plt.show()
 
 if __name__ == '__main__':
