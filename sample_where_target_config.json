@@ -7,8 +7,8 @@
         {
             "type": "calibration",
             "name": "Tau A",
-            "ra": "1:44:04.08",
-            "dec": "-15:56:14.93",
+            "ra": "05:34:31.9",
+            "dec": "22:00:52.2",
             "comment": "ra = hour:min:sec, dec = deg:arcmin:arcsec"
         }
     ]
