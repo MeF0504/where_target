@@ -69,7 +69,8 @@ def main(args):
 
     # set time
     if args.start is None:
-        start_time = datetime.now(tz=timezone.utc)
+        # start_time = datetime.now(tz=timezone.utc)
+        start_time = datetime.utcnow()
     elif re.match('[0-9][0-9][0-9][0-9]/[0-9][0-9]?/[0-9][0-9]?-[0-9][0-9]?:[0-9][0-9]?', args.start):
         start_time = datetime.strptime(args.start, '%Y/%m/%d-%H:%M')
     elif re.match('[0-9][0-9][0-9][0-9]/[0-9][0-9]?/[0-9][0-9]?', args.start):
@@ -183,6 +184,7 @@ def main(args):
         ax41.plot(times, np.where(targets_obsable[target.name], len(targets)-i, np.nan), '-', lw=4)
     ax41.set_xticks(print_times)
     ax41.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
+    ax41.set_xlim([times.min(), times.max()])
     ax41.set_yticks([len(targets)-i for i in range(len(targets))])
     ax41.set_yticklabels(targets_obsable.keys())
     ax41.set_ylim([0.5, len(targets)+0.5])
