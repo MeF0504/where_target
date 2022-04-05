@@ -35,7 +35,7 @@ def make_fixed_target(name, ra, dec):
     star = ephem.FixedBody()
     star.name = name
     star._ra = ephem.hours(ra)
-    star._dec = ephem.hours(dec)
+    star._dec = ephem.degrees(dec)
     star._epoch = '2000'
     return star
 
