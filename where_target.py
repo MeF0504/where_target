@@ -15,6 +15,7 @@ from tabulate import tabulate
 deg = 180.0/np.pi
 
 add_targets = {}
+conf = None
 conf_file = Path(__file__).parent/'where_target_config.json'
 if conf_file.is_file():
     with open(conf_file, 'r') as f:
@@ -58,7 +59,7 @@ def get_targets(targets):
 
 def main(args):
     # set observation place
-    if 'obs' in conf:
+    if conf is not None and 'obs' in conf:
         obs = ephem.Observer()
         obs.lat = conf['obs']['lat']
         obs.lon = conf['obs']['lon']
