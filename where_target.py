@@ -28,12 +28,17 @@ if conf_file.is_file():
                 else:
                     add_targets[ttype] = [target]
 
-def make_fixed_target(name, ra, dec):
+class EphemWrapper(ephem.FixedBody):
+    def __init__(self, type):
+        super().__init__()
+        self.type = type
+
+def make_fixed_target(name, type, ra, dec):
     # https://rhodesmill.org/pyephem/quick.html#catalog-format
     # http://www.clearskyinstitute.com/xephem/help/xephem.html#mozTocId468501
     # line = '{},f,{},{},{},2000'.format(name, ra, dec, magnitude)
     # star = ephem.readdb(line)
-    star = ephem.FixedBody()
+    star = EphemWrapper(type)
     star.name = name
     star._ra = ephem.hours(ra)
     star._dec = ephem.degrees(dec)
@@ -43,18 +48,30 @@ def make_fixed_target(name, ra, dec):
 def get_targets(targets):
     res = []
     if 'all' in targets or 'sun' in targets:
-        res.append(ephem.Sun())
+        _sun = ephem.Sun()
+        _sun.type = 'sun'
+        res.append(_sun)
     if 'all' in targets or 'moon' in targets:
-        res.append(ephem.Moon())
+        _moon = ephem.Moon()
+        # _moon.type = 'moon'
+        res.append(_moon)
     if 'all' in targets or 'planets' in targets:
-        res.append(ephem.Mars())
-        res.append(ephem.Jupiter())
-        res.append(ephem.Saturn())
-        res.append(ephem.Venus())
+        _mars = ephem.Mars()
+        # _mars.type = 'planets'
+        res.append(_mars)
+        _jupiter = ephem.Jupiter()
+        # _jupiter.type = 'planets'
+        res.append(_jupiter)
+        _sat = ephem.Saturn()
+        # _sat.type = 'planets'
+        res.append(_sat)
+        _venus = ephem.Venus()
+        # _venus.type = 'planets'
+        res.append(_venus)
     for ttype in add_targets:
         if 'all' in targets or ttype in targets:
             for add_target in add_targets[ttype]:
-                res.append(make_fixed_target(add_target['name'], add_target['ra'], add_target['dec']))
+                res.append(make_fixed_target(add_target['name'], ttype, add_target['ra'], add_target['dec']))
     return res
 
 def main(args):
@@ -109,6 +126,9 @@ def main(args):
     sun_thd = 5*np.pi/180.
     moon_thd = 5*np.pi/180.
     targets_obsable = {}
+    ## raster scan range
+    d_az = 15.*np.pi/180.
+    d_el = 15.*np.pi/180.
     sun = ephem.Sun()
     moon = ephem.Moon()
 
@@ -203,6 +223,9 @@ def main(args):
         # ax51.plot(lat, lon, '--', color=cmap(i), label=target.name)
         ax51.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
         ax51.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
+        if hasattr(target, 'type') and target.type=='raster':
+            for j in range(len(lat)):
+                ax51.fill_between([lat[j]-d_az, lat[j]+d_az], [lon[j]+d_el, lon[j]+d_el], [lon[j]-d_el, lon[j]-d_el], alpha=0.3, color=cmap(i))
     fig5.legend()
     ax_pos = ax51.get_position()
     fig5.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
