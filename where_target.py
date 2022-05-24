@@ -113,6 +113,12 @@ def main(args):
     else:
         interval = args.interval
 
+    # save directory
+    savedir = Path(args.output)
+    if not savedir.is_dir():
+        os.makedirs(savedir)
+        print('make directory {}'.format(savedir))
+
     # calculate
     if conf is not None and 'conditions' in conf:
         cond = conf['conditions']
@@ -198,7 +204,7 @@ def main(args):
     print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
     # plot table
     fig1.tight_layout(rect=[0.05, 0.05, 0.95, 0.9])  # left, bot, right, top
-    fig1.savefig('tmp/targets1.pdf')
+    fig1.savefig(savedir/'time_table.pdf')
 
     # az plot
     fig2 = plt.figure(figsize=(16/1.5, 9/1.5))
@@ -209,7 +215,7 @@ def main(args):
     ax21.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax21.set_ylabel('azimuth [deg]')
     fig2.legend()
-    fig2.savefig('tmp/targets2.pdf')
+    fig2.savefig(savedir/'az_plot.pdf')
 
     # el plot
     fig3 = plt.figure(figsize=(16/1.5, 9/1.5))
@@ -220,7 +226,7 @@ def main(args):
     ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax31.set_ylabel('elevation [deg]')
     fig3.legend()
-    fig3.savefig('tmp/targets3.pdf')
+    fig3.savefig(savedir/'el_plot.pdf')
 
     # observable flag plot
     fig4 = plt.figure(figsize=(16/1.5, 9/1.5))
@@ -233,7 +239,7 @@ def main(args):
     ax41.set_yticks([len(targets)-i for i in range(len(targets))])
     ax41.set_yticklabels(targets_obsable.keys())
     ax41.set_ylim([0.5, len(targets)+0.5])
-    fig4.savefig('tmp/targets4.pdf')
+    fig4.savefig(savedir/'obs_flags.pdf')
 
     # pointing of stars
     fig5 = plt.figure(figsize=(16/1.5, 9/1.5))
@@ -253,7 +259,7 @@ def main(args):
     fig5.legend()
     ax_pos = ax51.get_position()
     fig5.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
-    fig5.savefig('tmp/targets5.pdf')
+    fig5.savefig(savedir/'mollweide.pdf')
 
     plt.show()
 
@@ -263,6 +269,7 @@ if __name__ == '__main__':
     parser.add_argument('-start', help='start time (UTC): year/month/day or year/month/day-hour:min', type=str)
     parser.add_argument('-end', help='end time (UTC): year/month/day or year/month/day-hour:min', type=str)
     parser.add_argument('-interval', help='interval time [minutes]', type=float)
+    parser.add_argument('-o', '--output', help='output directory', type=str, default=Path(__file__).parent/'tmp')
     args = parser.parse_args()
     main(args)
 
