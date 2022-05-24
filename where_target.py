@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # https://eco.mtk.nao.ac.jp/cgi-bin/koyomi/cande/horizontal.cgi
+import os
 import sys
 from datetime import datetime, timedelta, timezone
 import json
