@@ -114,6 +114,10 @@ def main(args):
         interval = args.interval
 
     # calculate
+    if conf is not None and 'conditions' in conf:
+        cond = conf['conditions']
+    else:
+        cond = {}
     targets = get_targets(args.targets)
     ## for table
     table_label = ['time (UTC)']+[target.name for target in targets]
@@ -122,15 +126,35 @@ def main(args):
     targets_az = {}
     targets_el = {}
     ## observable check
-    el_min = 30.*np.pi/180.
-    sun_thd = 5*np.pi/180.
-    moon_thd = 5*np.pi/180.
+    if 'el_min' in cond:
+        el_min = cond['el_min']*np.pi/180.
+    else:
+        el_min = 30.*np.pi/180.
+    if 'sun_separation' in cond:
+        sun_thd = cond['sun_separation']*np.pi/180.
+    else:
+        sun_thd = 5*np.pi/180.
+    if 'moon_separation' in cond:
+        moon_thd = cond['moon_separation']*np.pi/180.
+    else:
+        moon_thd = 5*np.pi/180.
     targets_obsable = {}
     ## raster scan range
-    d_az = 15.*np.pi/180.
-    d_el = 15.*np.pi/180.
+    if 'raster_az_offset' in cond:
+        d_az = cond['raster_az_offset']*np.pi/180.
+    else:
+        d_az = 2.*np.pi/180.
+    if 'raster_el_offset' in cond:
+        d_el = cond['raster_el_offset']*np.pi/180.
+    else:
+        d_el = 2.*np.pi/180.
     sun = ephem.Sun()
     moon = ephem.Moon()
+    print('el_min: {:.2f} degree'.format(el_min/np.pi*180.))
+    print('sun_separation: {:.2f} degree'.format(sun_thd/np.pi*180.))
+    print('moon_separation: {:.2f} degree'.format(moon_thd/np.pi*180.))
+    print('raster_az_offset: {:.2f} degree'.format(d_az/np.pi*180.))
+    print('raster_el_offset: {:.2f} degree'.format(d_el/np.pi*180.))
 
     for target in targets:
         targets_az[target.name] = []
