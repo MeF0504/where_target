@@ -186,7 +186,11 @@ def main(args):
                     ephem.separation(target, sun)>sun_thd and\
                     ephem.separation(target, moon)>moon_thd)
         table_contents.append(line_contents)
+    for target in targets:
+        targets_az[target.name] = np.array(targets_az[target.name])
+        targets_el[target.name] = np.array(targets_el[target.name])
 
+    cmap = plt.get_cmap('tab10')
     fs = 15
     # make table
     table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
@@ -210,8 +214,11 @@ def main(args):
     # az plot
     fig2 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax21 = fig2.add_subplot(111)
-    for tname in targets_az:
-        ax21.plot(times, np.array(targets_az[tname])*deg, '-', label=tname)
+    for i,target in enumerate(targets):
+        tname = target.name
+        ax21.plot(times, np.array(targets_az[tname])*deg, '-', color=cmap(i), label=tname)
+        if hasattr(target, 'type') and target.type=='raster':
+            ax21.fill_between(times, (targets_az[tname]-d_az)*deg, (targets_az[tname]+d_az)*deg, alpha=0.3, color=cmap(i), label=None)
     ax21.set_xticks(print_times)
     ax21.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax21.set_ylabel('azimuth [deg]')
@@ -221,8 +228,11 @@ def main(args):
     # el plot
     fig3 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax31 = fig3.add_subplot(111)
-    for tname in targets_el:
-        ax31.plot(times, np.array(targets_el[tname])*deg, '-', label=tname)
+    for i,target in enumerate(targets):
+        tname = target.name
+        ax31.plot(times, np.array(targets_el[tname])*deg, '-', color=cmap(i), label=tname)
+        if hasattr(target, 'type') and target.type=='raster':
+            ax31.fill_between(times, (targets_el[tname]-d_el)*deg, (targets_el[tname]+d_el)*deg, alpha=0.3, color=cmap(i), label=None)
     ax31.set_xticks(print_times)
     ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax31.set_ylabel('elevation [deg]')
@@ -245,7 +255,6 @@ def main(args):
     # pointing of stars
     fig5 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax51 = fig5.add_subplot(111, projection='mollweide')
-    cmap = plt.get_cmap('tab10')
     for i,target in enumerate(targets):
         lat = np.array(targets_az[target.name])
         lat = np.where(lat>np.pi, lat-2*np.pi, lat)
