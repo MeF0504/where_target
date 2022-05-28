@@ -262,7 +262,10 @@ def main(args):
     fig5.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
     fig5.savefig(savedir/'mollweide.pdf')
 
-    plt.show()
+    if args.show:
+        plt.show()
+    plt.close('all')
+    print('saved files at {}'.format(savedir))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -270,6 +273,7 @@ if __name__ == '__main__':
     parser.add_argument('-start', help='start time (UTC): year/month/day or year/month/day-hour:min', type=str)
     parser.add_argument('-end', help='end time (UTC): year/month/day or year/month/day-hour:min', type=str)
     parser.add_argument('-interval', help='interval time [minutes]', type=float)
+    parser.add_argument('-show', help='show the made plots.', action='store_true')
     parser.add_argument('-o', '--output', help='output directory', type=str, default=Path(__file__).parent/'tmp')
     args = parser.parse_args()
     main(args)
