@@ -213,24 +213,30 @@ def main(args):
 
     cmap = plt.get_cmap('tab10')
     fs = 15
-    # make table
-    table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
-    print(table_str)
-    weight = len(targets)*3+2.3
-    colWidths = np.concatenate(([2.3], np.ones(len(targets))*3))/weight
-    fig1 = plt.figure(figsize=(weight, len(times)/3))
-    ax11 = fig1.add_subplot(111)
-    ax11.axis('off')
-    table = ax11.table(cellText=table_contents, colLabels=table_label, rowLabels=None, loc='center', colLoc='center', rowLoc='center', colWidths=colWidths, fontsize=fs)
-    table.auto_set_font_size(False)
-    for pos, cell in table.get_celld().items():
-        cell.set_height(1/len(times))
-
     plt.rcParams['font.size'] = fs
     print_times = times[[0, int(len(times)/3), int(len(times)*2/3), -1]]
-    # plot table
-    fig1.tight_layout(rect=[0.05, 0.05, 0.95, 0.9])  # left, bot, right, top
-    fig1.savefig(savedir/'time_table.pdf')
+    # make table
+    table_str = tabulate(table_contents, table_label, tablefmt='orgtbl', stralign='center')
+    if False:
+        print(table_str)
+        weight = len(targets)*3+2.3
+        colWidths = np.concatenate(([2.3], np.ones(len(targets))*3))/weight
+        fig1 = plt.figure(figsize=(weight, len(times)/3))
+        ax11 = fig1.add_subplot(111)
+        ax11.axis('off')
+        table = ax11.table(cellText=table_contents, colLabels=table_label, rowLabels=None, loc='center', colLoc='center', rowLoc='center', colWidths=colWidths, fontsize=fs)
+        table.auto_set_font_size(False)
+        for pos, cell in table.get_celld().items():
+            cell.set_height(1/len(times))
+
+        # plot table
+        fig1.tight_layout(rect=[0.05, 0.05, 0.95, 0.9])  # left, bot, right, top
+        fig1.savefig(savedir/'time_table.pdf')
+
+    with open(savedir/'table.txt', 'w') as f:
+        f.write(table_str)
+    if args.show:
+        print(table_str)
 
     # az plot
     fig2 = plt.figure(figsize=(16/1.5, 9/1.5))
