@@ -30,16 +30,17 @@ if conf_file.is_file():
                     add_targets[ttype] = [target]
 
 class EphemWrapper(ephem.FixedBody):
-    def __init__(self, type):
+    def __init__(self, type, raster=False):
         super().__init__()
         self.type = type
+        self.raster = raster
 
-def make_fixed_target(name, type, ra, dec):
+def make_fixed_target(name, type, ra, dec, raster):
     # https://rhodesmill.org/pyephem/quick.html#catalog-format
     # http://www.clearskyinstitute.com/xephem/help/xephem.html#mozTocId468501
     # line = '{},f,{},{},{},2000'.format(name, ra, dec, magnitude)
     # star = ephem.readdb(line)
-    star = EphemWrapper(type)
+    star = EphemWrapper(type, raster)
     star.name = name
     star._ra = ephem.hours(ra)
     star._dec = ephem.degrees(dec)
@@ -72,7 +73,11 @@ def get_targets(targets):
     for ttype in add_targets:
         if 'all' in targets or ttype in targets:
             for add_target in add_targets[ttype]:
-                res.append(make_fixed_target(add_target['name'], ttype, add_target['ra'], add_target['dec']))
+                if 'raster' in add_target:
+                    raster = add_target['raster']
+                else:
+                    raster = False
+                res.append(make_fixed_target(add_target['name'], ttype, add_target['ra'], add_target['dec'], raster))
     return res
 
 def main(args):
@@ -217,7 +222,7 @@ def main(args):
     for i,target in enumerate(targets):
         tname = target.name
         ax21.plot(times, np.array(targets_az[tname])*deg, '-', color=cmap(i), label=tname)
-        if hasattr(target, 'type') and target.type=='raster':
+        if hasattr(target, 'raster') and target.raster:
             ax21.fill_between(times, (targets_az[tname]-d_az)*deg, (targets_az[tname]+d_az)*deg, alpha=0.3, color=cmap(i), label=None)
     ax21.set_xticks(print_times)
     ax21.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
@@ -231,7 +236,7 @@ def main(args):
     for i,target in enumerate(targets):
         tname = target.name
         ax31.plot(times, np.array(targets_el[tname])*deg, '-', color=cmap(i), label=tname)
-        if hasattr(target, 'type') and target.type=='raster':
+        if hasattr(target, 'raster') and target.raster:
             ax31.fill_between(times, (targets_el[tname]-d_el)*deg, (targets_el[tname]+d_el)*deg, alpha=0.3, color=cmap(i), label=None)
     ax31.set_xticks(print_times)
     ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
@@ -263,7 +268,7 @@ def main(args):
         # ax51.plot(lat, lon, '--', color=cmap(i), label=target.name)
         ax51.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
         ax51.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
-        if hasattr(target, 'type') and target.type=='raster':
+        if hasattr(target, 'raster') and target.raster:
             for j in range(len(lat)):
                 ax51.fill_between([lat[j]-d_az, lat[j]+d_az], [lon[j]+d_el, lon[j]+d_el], [lon[j]-d_el, lon[j]-d_el], alpha=0.3, color=cmap(i))
     fig5.legend()
