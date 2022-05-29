@@ -142,6 +142,18 @@ def main(args):
         el_min = cond['el_min']*np.pi/180.
     else:
         el_min = 30.*np.pi/180.
+    if 'el_max' in cond:
+        el_max = cond['el_max']*np.pi/180.
+    else:
+        el_max = 180.*np.pi/180.
+    if 'az_min' in cond:
+        az_min = cond['az_min']*np.pi/180.
+    else:
+        az_min = 0.*np.pi/180.
+    if 'az_max' in cond:
+        az_max = cond['az_max']*np.pi/180.
+    else:
+        az_max = 360.*np.pi/180.
     if 'sun_separation' in cond:
         sun_thd = cond['sun_separation']*np.pi/180.
     else:
@@ -163,6 +175,9 @@ def main(args):
     sun = ephem.Sun()
     moon = ephem.Moon()
     print('el_min: {:.2f} degree'.format(el_min/np.pi*180.))
+    print('el_max: {:.2f} degree'.format(el_max/np.pi*180.))
+    print('az_min: {:.2f} degree'.format(az_min/np.pi*180.))
+    print('az_max: {:.2f} degree'.format(az_max/np.pi*180.))
     print('sun_separation: {:.2f} degree'.format(sun_thd/np.pi*180.))
     print('moon_separation: {:.2f} degree'.format(moon_thd/np.pi*180.))
     print('raster_az_offset: {:.2f} degree'.format(d_az/np.pi*180.))
@@ -187,7 +202,8 @@ def main(args):
             sun.compute(obs)
             moon.compute(obs)
             targets_obsable[target.name].append(\
-                    target.alt>=el_min and\
+                    el_min<=target.alt<=el_max and\
+                    az_min<=target.az<=az_max and\
                     ephem.separation(target, sun)>sun_thd and\
                     ephem.separation(target, moon)>moon_thd)
         table_contents.append(line_contents)
