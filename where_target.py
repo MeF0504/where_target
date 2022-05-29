@@ -240,6 +240,8 @@ def main(args):
         ax21.plot(times, np.array(targets_az[tname])*deg, '-', color=cmap(i), label=tname)
         if hasattr(target, 'raster') and target.raster:
             ax21.fill_between(times, (targets_az[tname]-d_az)*deg, (targets_az[tname]+d_az)*deg, alpha=0.3, color=cmap(i), label=None)
+        ax21.hlines(az_min*deg, times.min(), times.max(), colors='gray', ls='--')
+        ax21.hlines(az_max*deg, times.min(), times.max(), colors='gray', ls='--')
     ax21.set_xticks(print_times)
     ax21.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax21.set_ylabel('azimuth [deg]')
@@ -254,6 +256,8 @@ def main(args):
         ax31.plot(times, np.array(targets_el[tname])*deg, '-', color=cmap(i), label=tname)
         if hasattr(target, 'raster') and target.raster:
             ax31.fill_between(times, (targets_el[tname]-d_el)*deg, (targets_el[tname]+d_el)*deg, alpha=0.3, color=cmap(i), label=None)
+        ax31.hlines(el_min*deg, times.min(), times.max(), colors='gray', ls='--')
+        ax31.hlines(el_max*deg, times.min(), times.max(), colors='gray', ls='--')
     ax31.set_xticks(print_times)
     ax31.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax31.set_ylabel('elevation [deg]')
