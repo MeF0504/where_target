@@ -80,6 +80,12 @@ def get_targets(targets):
                 res.append(make_fixed_target(add_target['name'], ttype, add_target['ra'], add_target['dec'], raster))
     return res
 
+def chk_deg_condition(cond, item, default):
+    if item in cond:
+        return cond[item]*np.pi/180.
+    else:
+        return default*np.pi/180.
+
 def main(args):
     # set observation place
     if conf is not None and 'obs' in conf:
@@ -138,30 +144,12 @@ def main(args):
     targets_az = {}
     targets_el = {}
     ## observable check
-    if 'el_min' in cond:
-        el_min = cond['el_min']*np.pi/180.
-    else:
-        el_min = 30.*np.pi/180.
-    if 'el_max' in cond:
-        el_max = cond['el_max']*np.pi/180.
-    else:
-        el_max = 180.*np.pi/180.
-    if 'az_min' in cond:
-        az_min = cond['az_min']*np.pi/180.
-    else:
-        az_min = 0.*np.pi/180.
-    if 'az_max' in cond:
-        az_max = cond['az_max']*np.pi/180.
-    else:
-        az_max = 360.*np.pi/180.
-    if 'sun_separation' in cond:
-        sun_thd = cond['sun_separation']*np.pi/180.
-    else:
-        sun_thd = 5*np.pi/180.
-    if 'moon_separation' in cond:
-        moon_thd = cond['moon_separation']*np.pi/180.
-    else:
-        moon_thd = 5*np.pi/180.
+    el_min = chk_deg_condition(cond, 'el_min', 30.)
+    el_max = chk_deg_condition(cond, 'el_max', 180.)
+    az_min = chk_deg_condition(cond, 'az_min', 0.)
+    az_max = chk_deg_condition(cond, 'az_max', 360.)
+    sun_thd = chk_deg_condition(cond, 'sun_separation', 5.)
+    moon_thd = chk_deg_condition(cond, 'moon_separation', 5.)
     targets_obsable = {}
     ## raster scan range
     if 'raster_az_offset' in cond:
