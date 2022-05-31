@@ -150,7 +150,7 @@ def main(args):
     az_max = chk_deg_condition(cond, 'az_max', 360.)
     sun_thd = chk_deg_condition(cond, 'sun_separation', 5.)
     moon_thd = chk_deg_condition(cond, 'moon_separation', 5.)
-    targets_obsable = {}
+    targets_observable = {}
     ## raster scan range
     if 'raster_az_offset' in cond:
         d_az = cond['raster_az_offset']*np.pi/180.
@@ -174,7 +174,7 @@ def main(args):
     for target in targets:
         targets_az[target.name] = []
         targets_el[target.name] = []
-        targets_obsable[target.name] = []
+        targets_observable[target.name] = []
 
     times = np.arange(datetime.timestamp(start_time), datetime.timestamp(end_time), interval*60)
     for time in times:
@@ -189,7 +189,7 @@ def main(args):
             targets_el[target.name].append(target.alt)
             sun.compute(obs)
             moon.compute(obs)
-            targets_obsable[target.name].append(\
+            targets_observable[target.name].append(\
                     el_min<=target.alt<=el_max and\
                     az_min<=target.az<=az_max and\
                     ephem.separation(target, sun)>sun_thd and\
@@ -262,12 +262,12 @@ def main(args):
     fig4 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax41 = fig4.add_subplot(111)
     for i,target in enumerate(targets):
-        ax41.plot(times, np.where(targets_obsable[target.name], len(targets)-i, np.nan), '-', lw=4)
+        ax41.plot(times, np.where(targets_observable[target.name], len(targets)-i, np.nan), '-', lw=4)
     ax41.set_xticks(print_times)
     ax41.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
     ax41.set_xlim([times.min(), times.max()])
     ax41.set_yticks([len(targets)-i for i in range(len(targets))])
-    ax41.set_yticklabels(targets_obsable.keys())
+    ax41.set_yticklabels(targets_observable.keys())
     ax41.set_ylim([0.5, len(targets)+0.5])
     fig4.savefig(savedir/'obs_flags.pdf')
 
