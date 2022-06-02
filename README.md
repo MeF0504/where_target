@@ -1,4 +1,4 @@
-# where target
+# where target <!-- omit in toc -->
 
 This is a script that calculates the location of stars, planets, and so on over the sky.
 This script makes following table and plots in the output directory.
@@ -13,13 +13,14 @@ This script makes following table and plots in the output directory.
 - `mollweide.pdf`
   Show the pointing of each star in the sky using Mollweide method.
 
-- [where target](#where-target)
-  - [Requirement](#requirement)
-  - [Configuration](#configuration)
-    - [obs](#obs)
-    - [targets](#targets)
-    - [conditions](#conditions)
-  - [Usage](#usage)
+## Table of Contents <!-- omit in toc -->
+
+- [Requirement](#requirement)
+- [Configuration](#configuration)
+  - [obs](#obs)
+  - [targets](#targets)
+  - [conditions](#conditions)
+- [Usage](#usage)
 
 ## Requirement
 - python3
