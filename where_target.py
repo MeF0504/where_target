@@ -145,7 +145,7 @@ def main(args):
     targets_el = {}
     ## observable check
     el_min = chk_deg_condition(cond, 'el_min', 30.)
-    el_max = chk_deg_condition(cond, 'el_max', 180.)
+    el_max = chk_deg_condition(cond, 'el_max', 90.)
     az_min = chk_deg_condition(cond, 'az_min', 0.)
     az_max = chk_deg_condition(cond, 'az_max', 360.)
     sun_thd = chk_deg_condition(cond, 'sun_separation', 5.)

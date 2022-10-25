@@ -15,7 +15,7 @@
     ],
     "conditions": {
         "el_min": 30.0,
-        "el_max": 180.0,
+        "el_max": 90.0,
         "az_min": 75.0,
         "az_max": 290.0,
         "sun_separation": 15.0,
