@@ -29,11 +29,13 @@ if conf_file.is_file():
                 else:
                     add_targets[ttype] = [target]
 
+
 class EphemWrapper(ephem.FixedBody):
     def __init__(self, type, raster=False):
         super().__init__()
         self.type = type
         self.raster = raster
+
 
 def make_fixed_target(name, type, ra, dec, raster):
     # https://rhodesmill.org/pyephem/quick.html#catalog-format
@@ -46,6 +48,7 @@ def make_fixed_target(name, type, ra, dec, raster):
     star._dec = ephem.degrees(dec)
     star._epoch = '2000'
     return star
+
 
 def get_targets(targets):
     res = []
@@ -80,11 +83,13 @@ def get_targets(targets):
                 res.append(make_fixed_target(add_target['name'], ttype, add_target['ra'], add_target['dec'], raster))
     return res
 
+
 def chk_deg_condition(cond, item, default):
     if item in cond:
-        return cond[item]*np.pi/180.
+        return cond[item]/deg
     else:
-        return default*np.pi/180.
+        return default/deg
+
 
 def main(args):
     # set observation place
@@ -153,23 +158,23 @@ def main(args):
     targets_observable = {}
     ## raster scan range
     if 'raster_az_offset' in cond:
-        d_az = cond['raster_az_offset']*np.pi/180.
+        d_az = cond['raster_az_offset']/deg
     else:
-        d_az = 2.*np.pi/180.
+        d_az = 2./deg
     if 'raster_el_offset' in cond:
-        d_el = cond['raster_el_offset']*np.pi/180.
+        d_el = cond['raster_el_offset']/deg
     else:
-        d_el = 2.*np.pi/180.
+        d_el = 2./deg
     sun = ephem.Sun()
     moon = ephem.Moon()
-    print('el_min: {:.2f} degree'.format(el_min/np.pi*180.))
-    print('el_max: {:.2f} degree'.format(el_max/np.pi*180.))
-    print('az_min: {:.2f} degree'.format(az_min/np.pi*180.))
-    print('az_max: {:.2f} degree'.format(az_max/np.pi*180.))
-    print('sun_separation: {:.2f} degree'.format(sun_thd/np.pi*180.))
-    print('moon_separation: {:.2f} degree'.format(moon_thd/np.pi*180.))
-    print('raster_az_offset: {:.2f} degree'.format(d_az/np.pi*180.))
-    print('raster_el_offset: {:.2f} degree'.format(d_el/np.pi*180.))
+    print('el_min: {:.2f} degree'.format(el_min*deg))
+    print('el_max: {:.2f} degree'.format(el_max*deg))
+    print('az_min: {:.2f} degree'.format(az_min*deg))
+    print('az_max: {:.2f} degree'.format(az_max*deg))
+    print('sun_separation: {:.2f} degree'.format(sun_thd*deg))
+    print('moon_separation: {:.2f} degree'.format(moon_thd*deg))
+    print('raster_az_offset: {:.2f} degree'.format(d_az*deg))
+    print('raster_el_offset: {:.2f} degree'.format(d_el*deg))
 
     for target in targets:
         targets_az[target.name] = []
@@ -189,11 +194,11 @@ def main(args):
             targets_el[target.name].append(target.alt)
             sun.compute(obs)
             moon.compute(obs)
-            targets_observable[target.name].append(\
-                    el_min<=target.alt<=el_max and\
-                    az_min<=target.az<=az_max and\
-                    ephem.separation(target, sun)>sun_thd and\
-                    ephem.separation(target, moon)>moon_thd)
+            targets_observable[target.name].append(
+                    el_min <= target.alt <= el_max and
+                    az_min <= target.az <= az_max and
+                    ephem.separation(target, sun) > sun_thd and
+                    ephem.separation(target, moon) > moon_thd)
         table_contents.append(line_contents)
     for target in targets:
         targets_az[target.name] = np.array(targets_az[target.name])
@@ -229,7 +234,7 @@ def main(args):
     # az plot
     fig2 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax21 = fig2.add_subplot(111)
-    for i,target in enumerate(targets):
+    for i, target in enumerate(targets):
         tname = target.name
         ax21.plot(times, np.array(targets_az[tname])*deg, '-', color=cmap(i), label=tname)
         if hasattr(target, 'raster') and target.raster:
@@ -245,7 +250,7 @@ def main(args):
     # el plot
     fig3 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax31 = fig3.add_subplot(111)
-    for i,target in enumerate(targets):
+    for i, target in enumerate(targets):
         tname = target.name
         ax31.plot(times, np.array(targets_el[tname])*deg, '-', color=cmap(i), label=tname)
         if hasattr(target, 'raster') and target.raster:
@@ -261,7 +266,7 @@ def main(args):
     # observable flag plot
     fig4 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax41 = fig4.add_subplot(111)
-    for i,target in enumerate(targets):
+    for i, target in enumerate(targets):
         ax41.plot(times, np.where(targets_observable[target.name], len(targets)-i, np.nan), '-', lw=4)
     ax41.set_xticks(print_times)
     ax41.set_xticklabels([datetime.fromtimestamp(t, tz=start_time.tzinfo).strftime('%Y/%m/%d\n%H:%M') for t in print_times])
@@ -274,9 +279,9 @@ def main(args):
     # pointing of stars
     fig5 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax51 = fig5.add_subplot(111, projection='mollweide')
-    for i,target in enumerate(targets):
+    for i, target in enumerate(targets):
         lat = np.array(targets_az[target.name])
-        lat = np.where(lat>np.pi, lat-2*np.pi, lat)
+        lat = np.where(lat > np.pi, lat-2*np.pi, lat)
         lon = np.array(targets_el[target.name])
         ax51.plot(lat[1:-1], lon[1:-1], '.', color=cmap(i), label=target.name)
         # ax51.plot(lat, lon, '--', color=cmap(i), label=target.name)
@@ -295,6 +300,7 @@ def main(args):
     plt.close('all')
     print('saved files at {}'.format(savedir))
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-targets', help='target', default=['all'], type=str, nargs='*', choices=['all', 'sun', 'moon', 'planets']+list(add_targets.keys()))
@@ -305,4 +311,3 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', help='output directory', type=str, default=Path(__file__).parent/'tmp')
     args = parser.parse_args()
     main(args)
-
