@@ -25,14 +25,14 @@ This script makes following table and plots in the output directory.
 ## Requirement
 - python3
 - modules
-    - `ephem`
+    - `ephem` or `astropy`
     - `numpy`
     - `matplotlib`
     - `tabulate`
 
     You can install them from pip.
     ``` shell
-    pip install ephem numpy matplotlib tabulate
+    pip install ephem astropy numpy matplotlib tabulate
     ```
 
 ## Configuration
@@ -48,6 +48,8 @@ Please also see the `sample_where_target_config.json`.
     - latitude of the observation site.
   - `lon` (string)
     - longitude of the observation site.
+  - `height` (string)
+    - the height of the observation site.
 
 ### targets
   Configuration list of additional stars. Sun, Moon, and planets are already defined. These stars are considered fixed bodies.

@@ -12,6 +12,14 @@
             "ra": "05:34:31.9",
             "dec": "22:00:52.2",
             "comment": "ra = hour:min:sec, dec = deg:arcmin:arcsec"
+        },
+        {
+            "type": "CMB",
+            "name": "patch",
+            "ces": true,
+            "ra": ["04:00:00.0", "21:00:00.0", "04:00:00.0", "21:00:00.0"],
+            "dec": ["-30:00:00", "-60:00:00", "-60:00:00", "-30:00:00"],
+            "comment": "For CES, the RA and Dec parameters are lists of 4 vertices."
         }
     ],
     "conditions": {

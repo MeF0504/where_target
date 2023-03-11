@@ -36,34 +36,39 @@ if conf_file.is_file():
 
 
 class Target:
-    def __init__(self, name, type, body, raster):
+    def __init__(self, name, type, body, raster, ces):
         self.name = name
         self.type = type
         self.body = body
         self.raster = raster
+        self.ces = ces
 
 
-def make_fixed_target(name, type, ra, dec, raster):
+def make_fixed_target(name, type, ra, dec, raster, ces):
     body = SkyCoord(ra=ra, dec=dec, frame='icrs', unit=(u.hourangle, u.deg))
-    target = Target(name, type, body, raster)
+    target = Target(name, type, body, raster, ces)
     return target
 
 
 def get_targets(targets, time):
     res = []
     if 'all' in targets or 'sun' in targets:
-        tmp = Target('Sun', 'sun', get_sun(time), False)
+        tmp = Target('Sun', 'sun', get_sun(time), False, False)
         res.append(tmp)
     if 'all' in targets or 'moon' in targets:
-        tmp = Target('Moon', 'moon', get_moon(time), False)
+        tmp = Target('Moon', 'moon', get_moon(time), False, False)
         res.append(tmp)
     if 'all' in targets or 'planets' in targets:
         # list: solar_system_ephemeris.bodies
         with solar_system_ephemeris.set('builtin'):
-            mars = Target('Mars', 'planet', get_body('mars', time), False)
-            jup = Target('Jupiter', 'planet', get_body('jupiter', time), False)
-            sat = Target('Saturn', 'planet', get_body('saturn', time), False)
-            venus = Target('Venus', 'planet', get_body('venus', time), False)
+            mars = Target('Mars', 'planet', get_body('mars', time),
+                          False, False)
+            jup = Target('Jupiter', 'planet', get_body('jupiter', time),
+                         False, False)
+            sat = Target('Saturn', 'planet', get_body('saturn', time),
+                         False, False)
+            venus = Target('Venus', 'planet', get_body('venus', time),
+                           False, False)
             res += [mars, jup, sat, venus]
     for ttype in add_targets:
         if 'all' in targets or ttype in targets:
@@ -72,9 +77,13 @@ def get_targets(targets, time):
                     raster = add_target['raster']
                 else:
                     raster = False
+                if 'ces' in add_target:
+                    ces = add_target['ces']
+                else:
+                    ces = False
                 tmp = make_fixed_target(add_target['name'], ttype,
                                         add_target['ra'], add_target['dec'],
-                                        raster)
+                                        raster, ces)
                 res.append(tmp)
     return res
 
@@ -84,6 +93,64 @@ def chk_deg_condition(cond, item, default):
         return cond[item]/deg
     else:
         return default/deg
+
+
+def calc_CES(target, obs, times, elevation):
+    L = len(times)
+    ok = np.zeros(L, dtype=bool)
+    az = np.zeros((2, L))
+    for i, t in enumerate(times):
+        altaz = target.body.transform_to(AltAz(obstime=t, location=obs))
+        alt_min = altaz.alt.min()/u.deg/deg
+        alt_max = altaz.alt.max()/u.deg/deg
+        alts = altaz.alt/u.deg/deg
+        azs = altaz.az/u.deg/deg
+        sort_idx = np.argsort(alts)
+        if alt_min < elevation < alt_max:
+            ok[i] = True
+            if elevation < alts[sort_idx[-1]] and \
+               alts[sort_idx[-2]] < elevation:
+                #  _/\_____el
+                #  /  \
+                #  \   \
+                #   \  /
+                #    \/
+                idx1 = sort_idx[[-1, -2]]
+                idx2 = sort_idx[[-1, -3]]
+            elif elevation < alts[sort_idx[-2]] and \
+                 alts[sort_idx[-3]] < elevation:
+                #   /\
+                #  /  \
+                # -\   \-----el
+                #   \  /
+                #    \/
+                idx1 =  sort_idx[[-2, -4]]
+                idx2 =  sort_idx[[-1, -3]]
+            elif elevation < alts[sort_idx[1]] and \
+                 alts[sort_idx[0]] < elevation:
+                #   /\
+                #  /  \
+                #  \   \
+                #  _\  /_____el
+                #    \/
+                idx1 = sort_idx[[0, 2]]
+                idx2 = sort_idx[[0, 1]]
+            else:
+                print('failed to set az range')
+                idx1 = sort_idx[[-1, -1]]
+                idx2 = sort_idx[[0, 0]]
+            tmp_az1 = np.interp(elevation, [alts[idx1[0]], alts[idx1[1]]],
+                                [azs[idx1[0]], azs[idx1[1]]])
+            # tmp_az1 = np.arccos(np.cos(tmp_az1))
+            az[0, i] = tmp_az1
+            tmp_az2 = np.interp(elevation, [alts[idx2[0]], alts[idx2[1]]],
+                                [azs[idx2[0]], azs[idx2[1]]])
+            # tmp_az2 = np.arccos(np.cos(tmp_az2))
+            az[1, i] = tmp_az2
+        else:
+            ok[i] = False
+            az[:, i] = np.array([np.nan, np.nan])
+    return ok, az
 
 
 def main(args):
@@ -96,6 +163,7 @@ def main(args):
         else:
             h = 0.0
     else:
+        #  Chile, Atacama
         lat = -22.9579
         lon = -67.7862
         h = 0.0
@@ -153,6 +221,7 @@ def main(args):
     az_max = chk_deg_condition(cond, 'az_max', 360.)
     sun_thd = chk_deg_condition(cond, 'sun_separation', 5.)
     moon_thd = chk_deg_condition(cond, 'moon_separation', 5.)
+    con_el = chk_deg_condition(cond, 'constant_elevation', 41.)
     targets_observable = {}
     # raster scan range
     if 'raster_az_offset' in cond:
@@ -172,6 +241,7 @@ def main(args):
     print('moon_separation: {:.2f} degree'.format(moon_thd*deg))
     print('raster_az_offset: {:.2f} degree'.format(d_az*deg))
     print('raster_el_offset: {:.2f} degree'.format(d_el*deg))
+    print('constant_elevation: {:.2f} degree'.format(con_el*deg))
 
     # calculation preparation
     targets = get_targets(args.targets, times)
@@ -184,6 +254,12 @@ def main(args):
     sun = get_sun(times)
     moon = get_moon(times)
     for target in targets:
+        if target.ces:
+            ok, az = calc_CES(target, obs, times, con_el)
+            targets_az[target.name] = az
+            targets_el[target.name] = np.where(ok, con_el, np.nan)
+            targets_observable[target.name] = ok
+            continue
         target_altaz = target.body.transform_to(AltAz(obstime=times,
                                                       location=obs))
         sun_sep = np.array(target.body.separation(sun))/deg
@@ -205,9 +281,19 @@ def main(args):
     table_contents = [[date.strftime('%Y/%m/%d %H:%M')] for date in dates]
     for i, line in enumerate(table_contents):
         for target in targets:
-            az = targets_az[target.name][i]*deg
-            el = targets_el[target.name][i]*deg
-            line.append('az: {:05.1f} deg | el: {:+05.1f} deg'.format(az, el))
+            if target.ces:
+                az = targets_az[target.name][:, i]*deg
+                el = targets_el[target.name][i]*deg
+                if not np.isnan(az[0]):
+                    ces_az_min = int(az[0])
+                    ces_az_max = int(az[1])
+                    line.append('az: {:03d}-{:03d} deg | el: {:+05.1f} deg'.format(ces_az_min, ces_az_max, el))
+                else:
+                    line.append('az: ----- deg | el: {:+05.1f} deg'.format(el))
+            else:
+                az = targets_az[target.name][i]*deg
+                el = targets_el[target.name][i]*deg
+                line.append('az: {:05.1f} deg | el: {:+05.1f} deg'.format(az, el))
     table_str = tabulate(table_contents, table_label,
                          tablefmt='orgtbl', stralign='center')
     with open(savedir/'table.txt', 'w') as f:
@@ -226,16 +312,22 @@ def main(args):
     ax11 = fig1.add_subplot(111)
     for i, target in enumerate(targets):
         tname = target.name
-        ax11.plot(raw_times, np.array(targets_az[tname])*deg, '-',
-                  color=cmap(i), label=tname)
-        if hasattr(target, 'raster') and target.raster:
-            ax11.fill_between(raw_times, (targets_az[tname]-d_az)*deg,
-                              (targets_az[tname]+d_az)*deg, alpha=0.3,
-                              color=cmap(i), label=None)
-        ax11.hlines(az_min*deg, raw_times.min(), raw_times.max(),
-                    colors='gray', ls='--')
-        ax11.hlines(az_max*deg, raw_times.min(), raw_times.max(),
-                    colors='gray', ls='--')
+        if target.ces:
+            ces_az_max = targets_az[tname][0]
+            ces_az_min = targets_az[tname][1]
+            ax11.fill_between(raw_times, ces_az_min*deg, ces_az_max*deg,
+                              color=cmap(i), label=tname)
+        else:
+            ax11.plot(raw_times, np.array(targets_az[tname])*deg, '-',
+                      color=cmap(i), label=tname)
+            if target.raster:
+                ax11.fill_between(raw_times, (targets_az[tname]-d_az)*deg,
+                                  (targets_az[tname]+d_az)*deg, alpha=0.3,
+                                  color=cmap(i), label=None)
+    ax11.hlines(az_min*deg, raw_times.min(), raw_times.max(),
+                colors='gray', ls='--')
+    ax11.hlines(az_max*deg, raw_times.min(), raw_times.max(),
+                colors='gray', ls='--')
     ax11.set_xticks(print_times)
     ax11.set_xticklabels(xlabel)
     ax11.set_ylabel('azimuth [deg]')
@@ -249,14 +341,14 @@ def main(args):
         tname = target.name
         ax21.plot(raw_times, np.array(targets_el[tname])*deg, '-',
                   color=cmap(i), label=tname)
-        if hasattr(target, 'raster') and target.raster:
+        if target.raster:
             ax21.fill_between(raw_times, (targets_el[tname]-d_el)*deg,
                               (targets_el[tname]+d_el)*deg, alpha=0.3,
                               color=cmap(i), label=None)
-        ax21.hlines(el_min*deg, raw_times.min(), raw_times.max(),
-                    colors='gray', ls='--')
-        ax21.hlines(el_max*deg, raw_times.min(), raw_times.max(),
-                    colors='gray', ls='--')
+    ax21.hlines(el_min*deg, raw_times.min(), raw_times.max(),
+                colors='gray', ls='--')
+    ax21.hlines(el_max*deg, raw_times.min(), raw_times.max(),
+                colors='gray', ls='--')
     ax21.set_xticks(print_times)
     ax21.set_xticklabels(xlabel)
     ax21.set_ylabel('elevation [deg]')
@@ -282,19 +374,35 @@ def main(args):
     fig4 = plt.figure(figsize=(16/1.5, 9/1.5))
     ax41 = fig4.add_subplot(111, projection='mollweide')
     for i, target in enumerate(targets):
-        lat = np.array(targets_az[target.name])
-        lat = np.where(lat > np.pi, lat-2*np.pi, lat)
-        lon = np.array(targets_el[target.name])
-        ax41.plot(lat[1:-1], lon[1:-1], '.', color=cmap(i), label=target.name)
-        # ax41.plot(lat, lon, '--', color=cmap(i), label=target.name)
-        ax41.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
-        ax41.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
-        if hasattr(target, 'raster') and target.raster:
-            for j in range(len(lat)):
-                ax41.fill_between([lat[j]-d_az, lat[j]+d_az],
-                                  [lon[j]+d_el, lon[j]+d_el],
-                                  [lon[j]-d_el, lon[j]-d_el],
-                                  alpha=0.3, color=cmap(i))
+        if target.ces:
+            continue
+            ces_label = target.name
+            for j in range(len(times)):
+                if np.isnan(targets_el[target.name][j]):
+                    continue
+                print(targets_az[target.name][:, j])
+                ax41.fill_between(targets_az[target.name][:, j],
+                                  [targets_el[target.name][j],
+                                   targets_el[target.name][j]],
+                                  [targets_el[target.name][j],
+                                   targets_el[target.name][j]],
+                                  alpha=0.3, color=cmap(i), label=ces_label)
+                ces_label = None
+        else:
+            lat = np.array(targets_az[target.name])
+            lat = np.where(lat > np.pi, lat-2*np.pi, lat)
+            lon = np.array(targets_el[target.name])
+            ax41.plot(lat[1:-1], lon[1:-1], '.',
+                      color=cmap(i), label=target.name)
+            # ax41.plot(lat, lon, '--', color=cmap(i), label=target.name)
+            ax41.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
+            ax41.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
+            if target.raster:
+                for j in range(len(lat)):
+                    ax41.fill_between([lat[j]-d_az, lat[j]+d_az],
+                                      [lon[j]+d_el, lon[j]+d_el],
+                                      [lon[j]-d_el, lon[j]-d_el],
+                                      alpha=0.3, color=cmap(i))
     fig4.legend()
     ax_pos = ax41.get_position()
     fig4.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
