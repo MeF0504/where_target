@@ -31,6 +31,7 @@
         "moon_separation": 15.0,
         "raster_el_offset": 3.0,
         "raster_az_offset": 3.0,
+        "constant_elevation": 41.0,
         "comment": "units of all parameters are degrees."
     }
 }

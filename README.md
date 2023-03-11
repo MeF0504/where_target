@@ -65,6 +65,8 @@ Please also see the `sample_where_target_config.json`.
     - Declination of the star (deg:arcmin:arcsec).
   - `raster` (bool)
     - The flag that the scan of this star is a raster scan or not. If true, the raster scan region is also shown in plots.
+  - `ces` (bool)
+    - The flag that the scan is a constant elevation scan. If true, this scan is not a star-tracking scan, but tracking a region on the sky map at a constant elevation.
 
 ### conditions
   Observation configurations.
@@ -85,6 +87,8 @@ Please also see the `sample_where_target_config.json`.
     - The elevation range of the raster scan (degree).
   - `raster_az_offset` (float)
     - The azimuth range of the raster scan (degree).
+  - `constant_elevation` (float)
+    - The elevation of the constant elevation scan.
 
 ## Usage
 ``` shell
@@ -92,7 +96,7 @@ python3 where_target.py [options]
 ```
 currently available options are:
 - -targets
-  - select targets. sun, moon, and planets are available by default.
+  - select targets. Sun, Moon, and planets are available by default.
   You can append targets by adding configurations in `where_target_config.json`.
 - -start
   - start time (UTC). The format is `yyyy/MM/dd` or `yyyy/MM/dd-hh:mm`.
