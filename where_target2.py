@@ -316,14 +316,14 @@ def main(args):
             ces_az_max = targets_az[tname][0]
             ces_az_min = targets_az[tname][1]
             ax11.fill_between(raw_times, ces_az_min*deg, ces_az_max*deg,
-                              color=cmap(i), label=tname)
+                              color=cmap(i % 10), label=tname)
         else:
             ax11.plot(raw_times, np.array(targets_az[tname])*deg, '-',
-                      color=cmap(i), label=tname)
+                      color=cmap(i % 10), label=tname)
             if target.raster:
                 ax11.fill_between(raw_times, (targets_az[tname]-d_az)*deg,
                                   (targets_az[tname]+d_az)*deg, alpha=0.3,
-                                  color=cmap(i), label=None)
+                                  color=cmap(i % 10), label=None)
     ax11.hlines(az_min*deg, raw_times.min(), raw_times.max(),
                 colors='gray', ls='--')
     ax11.hlines(az_max*deg, raw_times.min(), raw_times.max(),
@@ -340,11 +340,11 @@ def main(args):
     for i, target in enumerate(targets):
         tname = target.name
         ax21.plot(raw_times, np.array(targets_el[tname])*deg, '-',
-                  color=cmap(i), label=tname)
+                  color=cmap(i % 10), label=tname)
         if target.raster:
             ax21.fill_between(raw_times, (targets_el[tname]-d_el)*deg,
                               (targets_el[tname]+d_el)*deg, alpha=0.3,
-                              color=cmap(i), label=None)
+                              color=cmap(i % 10), label=None)
     ax21.hlines(el_min*deg, raw_times.min(), raw_times.max(),
                 colors='gray', ls='--')
     ax21.hlines(el_max*deg, raw_times.min(), raw_times.max(),
@@ -386,23 +386,23 @@ def main(args):
                                    targets_el[target.name][j]],
                                   [targets_el[target.name][j],
                                    targets_el[target.name][j]],
-                                  alpha=0.3, color=cmap(i), label=ces_label)
+                                  alpha=0.3, color=cmap(i % 10), label=ces_label)
                 ces_label = None
         else:
             lat = np.array(targets_az[target.name])
             lat = np.where(lat > np.pi, lat-2*np.pi, lat)
             lon = np.array(targets_el[target.name])
             ax41.plot(lat[1:-1], lon[1:-1], '.',
-                      color=cmap(i), label=target.name)
-            # ax41.plot(lat, lon, '--', color=cmap(i), label=target.name)
-            ax41.plot([lat[0]], [lon[0]], '*', color=cmap(i), ms=6)
-            ax41.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i), ms=6)
+                      color=cmap(i % 10), label=target.name)
+            # ax41.plot(lat, lon, '--', color=cmap(i % 10), label=target.name)
+            ax41.plot([lat[0]], [lon[0]], '*', color=cmap(i % 10), ms=6)
+            ax41.plot([lat[-1]], [lon[-1]], 'x', color=cmap(i % 10), ms=6)
             if target.raster:
                 for j in range(len(lat)):
                     ax41.fill_between([lat[j]-d_az, lat[j]+d_az],
                                       [lon[j]+d_el, lon[j]+d_el],
                                       [lon[j]-d_el, lon[j]-d_el],
-                                      alpha=0.3, color=cmap(i))
+                                      alpha=0.3, color=cmap(i % 10))
     fig4.legend()
     ax_pos = ax41.get_position()
     fig4.text(ax_pos.x1, ax_pos.y0+0.1, 'start: *\nend: x')
