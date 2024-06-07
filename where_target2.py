@@ -185,8 +185,11 @@ def main(args):
             continue
         target_altaz = target.body.transform_to(AltAz(obstime=times,
                                                       location=obs))
-        sun_sep = np.array(target.body.separation(sun))/deg
-        moon_sep = np.array(target.body.separation(moon))/deg
+        # sun_sep = np.array(target.body.separation(sun))/deg
+        # moon_sep = np.array(target.body.separation(moon))/deg
+        # I'm not sure what causes the difference between ↓ and ↑
+        sun_sep = sun.separation(target.body).radian
+        moon_sep = moon.separation(target.body).radian
         targets_az[target.name] = np.array(target_altaz.az)/deg
         targets_el[target.name] = np.array(target_altaz.alt)/deg
         targets_observable[target.name] = \
