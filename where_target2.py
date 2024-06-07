@@ -6,6 +6,7 @@ import argparse
 from datetime import datetime, timedelta, timezone
 import re
 from pathlib import Path
+sys.path.append(str(Path(__file__).parent))
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,11 +14,11 @@ from tabulate import tabulate
 
 # from astropy.visualization import astropy_mpl_style, quantity_support
 import astropy.units as u
-from astropy.coordinates import get_sun, get_moon, AltAz
+from astropy.coordinates import get_sun, get_body, AltAz
 from astropy.time import Time
 
-from .wtlib import add_targets, conf
-from .wtlib import get_targets, get_obs
+from wtlib import add_targets, conf
+from wtlib import get_targets, get_obs
 
 deg = 180.0/np.pi
 
@@ -174,7 +175,7 @@ def main(args):
 
     # calculate
     sun = get_sun(times)
-    moon = get_moon(times)
+    moon = get_body("moon", times)
     for target in targets:
         if target.ces:
             ok, az = calc_CES(target, obs, times, con_el)

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import astropy.units as u
-from astropy.coordinates import get_sun, get_moon, get_body, \
+from astropy.coordinates import get_sun, get_body, \
     SkyCoord, solar_system_ephemeris, EarthLocation
 
 
@@ -59,7 +59,7 @@ def get_targets(targets, time):
         tmp = Target('Sun', 'sun', get_sun(time), False, False)
         res.append(tmp)
     if 'all' in targets or 'moon' in targets:
-        tmp = Target('Moon', 'moon', get_moon(time), False, False)
+        tmp = Target('Moon', 'moon', get_bosy('moon', time), False, False)
         res.append(tmp)
     if 'all' in targets or 'planets' in targets:
         # list: solar_system_ephemeris.bodies
